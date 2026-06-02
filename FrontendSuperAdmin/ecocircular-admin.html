@@ -1,0 +1,1059 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>EcoCircular — Panel de Administración</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+  /* ── Reset ── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  /* ── Tokens ── */
+  :root {
+    --green-50:  #EAF3DE; --green-100: #C0DD97; --green-200: #97C459;
+    --green-400: #639922; --green-600: #3B6D11; --green-800: #27500A; --green-900: #173404;
+    --teal-50:   #E1F5EE; --teal-100:  #9FE1CB; --teal-400:  #1D9E75;
+    --teal-600:  #0F6E56; --teal-800:  #085041;
+    --gray-50:   #F1EFE8; --gray-100:  #D3D1C7; --gray-200:  #B4B2A9;
+    --gray-400:  #888780; --gray-600:  #5F5E5A; --gray-800:  #444441; --gray-900: #2C2C2A;
+    --red-50:    #FCEBEB; --red-100:   #F7C1C1; --red-200:   #F09595;
+    --red-600:   #A32D2D; --red-800:   #791F1F;
+    --amber-50:  #FAEEDA; --amber-200: #EF9F27; --amber-600: #854F0B;
+    --bg: #F8FAF7; --surface: #FFFFFF; --border: #E2E8DC;
+    --text: #1A2318; --muted: #5F6E58;
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    font-size: 15px;
+    line-height: 1.6;
+  }
+
+  /* ── App shell ── */
+  .app-shell   { display: flex; min-height: 100vh; }
+  .main-content { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+
+  /* ── Sidebar ── */
+  .sidebar {
+    width: 240px; flex-shrink: 0;
+    background: var(--green-900);
+    display: flex; flex-direction: column;
+    position: sticky; top: 0; height: 100vh; overflow-y: auto;
+  }
+  .sidebar-logo {
+    padding: 24px 20px 16px;
+    border-bottom: 1px solid rgba(255,255,255,.08);
+  }
+  .logo-mark { display: flex; align-items: center; gap: 10px; }
+  .logo-icon {
+    width: 34px; height: 34px; background: var(--green-200);
+    border-radius: 9px; display: flex; align-items: center; justify-content: center;
+  }
+  .logo-icon svg { width: 18px; height: 18px; stroke: var(--green-900); fill: none; stroke-width: 1.8; }
+  .logo-text { color: #fff; font-size: 16px; font-weight: 600; letter-spacing: -.3px; }
+  .logo-sub  { color: rgba(255,255,255,.4); font-size: 11px; margin-top: 1px; }
+
+  .sidebar-nav  { flex: 1; padding: 14px 10px; }
+  .nav-section  { margin-bottom: 22px; }
+  .nav-label {
+    font-size: 10px; font-weight: 600; letter-spacing: 1.3px;
+    text-transform: uppercase; color: rgba(255,255,255,.32);
+    padding: 0 10px; margin-bottom: 6px;
+  }
+  .nav-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 10px; border-radius: 8px; cursor: pointer;
+    color: rgba(255,255,255,.6); font-size: 14px; font-weight: 400;
+    transition: all .15s; border: none; background: none;
+    width: 100%; text-align: left; font-family: inherit;
+  }
+  .nav-item:hover  { background: rgba(255,255,255,.06); color: #fff; }
+  .nav-item.active { background: rgba(192,221,151,.18); color: var(--green-100); font-weight: 500; }
+  .nav-item svg    { width: 16px; height: 16px; flex-shrink: 0; opacity: .7; fill: none; stroke: currentColor; stroke-width: 1.8; }
+  .nav-item.active svg { opacity: 1; }
+
+  .sidebar-footer { padding: 14px 10px; border-top: 1px solid rgba(255,255,255,.08); }
+  .user-pill {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 10px; border-radius: 8px; background: rgba(255,255,255,.06);
+  }
+  .user-avatar {
+    width: 30px; height: 30px; border-radius: 50%;
+    background: var(--green-400); display: flex; align-items: center;
+    justify-content: center; font-size: 12px; font-weight: 600; color: #fff; flex-shrink: 0;
+  }
+  .user-info   { flex: 1; min-width: 0; }
+  .user-name   { font-size: 12px; font-weight: 500; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .user-role   { font-size: 10px; color: rgba(255,255,255,.4); }
+  .logout-btn  {
+    background: none; border: none; cursor: pointer;
+    color: rgba(255,255,255,.35); padding: 3px; transition: .15s;
+  }
+  .logout-btn:hover { color: rgba(255,255,255,.75); }
+  .logout-btn svg   { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 1.8; }
+
+  /* ── Topbar ── */
+  .topbar {
+    padding: 16px 28px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .page-title { font-size: 18px; font-weight: 600; letter-spacing: -.3px; }
+  .page-sub   { font-size: 13px; color: var(--muted); margin-top: 1px; }
+
+  /* ── Content ── */
+  .content-area { padding: 28px; flex: 1; }
+
+  /* ── Stat cards ── */
+  .stat-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 14px; margin-bottom: 28px;
+  }
+  .stat-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 18px 20px;
+  }
+  .stat-label { font-size: 12px; color: var(--muted); font-weight: 500; margin-bottom: 6px; }
+  .stat-value { font-size: 26px; font-weight: 600; letter-spacing: -.5px; }
+  .stat-badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 11px; margin-top: 6px; padding: 2px 8px;
+    border-radius: 20px; background: var(--green-50); color: var(--green-800); font-weight: 500;
+  }
+
+  /* ── Table card ── */
+  .table-card   { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+  .table-header {
+    padding: 15px 20px; display: flex; align-items: center;
+    justify-content: space-between; border-bottom: 1px solid var(--border);
+  }
+  .table-title  { font-size: 14px; font-weight: 600; }
+  table         { width: 100%; border-collapse: collapse; }
+  thead th {
+    font-size: 11px; font-weight: 600; color: var(--muted);
+    text-transform: uppercase; letter-spacing: .7px;
+    padding: 11px 20px; text-align: left;
+    background: var(--gray-50); border-bottom: 1px solid var(--border);
+  }
+  tbody tr   { border-bottom: 1px solid var(--border); transition: background .1s; }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: #F6FAF4; }
+  tbody td   { padding: 12px 20px; font-size: 14px; color: var(--text); }
+
+  /* ── Badges ── */
+  .badge       { display: inline-flex; align-items: center; padding: 3px 9px; border-radius: 20px; font-size: 11px; font-weight: 500; }
+  .badge-green { background: var(--green-50); color: var(--green-800); }
+  .badge-gray  { background: var(--gray-50);  color: var(--gray-600); }
+  .badge-teal  { background: var(--teal-50);  color: var(--teal-800); }
+  .badge-amber { background: var(--amber-50); color: var(--amber-600); }
+  .badge-red   { background: var(--red-50);   color: var(--red-800); }
+
+  /* ── Buttons ── */
+  .btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 8px 16px; border-radius: 8px;
+    font-size: 13px; font-weight: 500; font-family: inherit;
+    cursor: pointer; border: none; transition: all .15s;
+  }
+  .btn-primary  { background: var(--green-600); color: #fff; }
+  .btn-primary:hover  { background: var(--green-800); }
+  .btn-outline  { background: transparent; border: 1px solid var(--border); color: var(--text); }
+  .btn-outline:hover  { background: var(--gray-50); }
+  .btn-danger   { background: transparent; border: 1px solid var(--red-200); color: var(--red-600); }
+  .btn-danger:hover   { background: var(--red-50); }
+  .btn-sm       { padding: 5px 12px; font-size: 12px; }
+  .btn:disabled { opacity: .5; cursor: not-allowed; }
+  .btn svg      { width: 14px; height: 14px; flex-shrink: 0; fill: none; stroke: currentColor; stroke-width: 2; }
+
+  /* ── Modal / Overlay ── */
+  .overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,.45);
+    z-index: 200; display: flex; align-items: center; justify-content: center;
+  }
+  .modal {
+    background: var(--surface); border-radius: 16px;
+    width: 480px; max-width: 95vw; padding: 28px;
+    box-shadow: 0 20px 60px rgba(0,0,0,.18);
+  }
+  .modal-head   { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; }
+  .modal-title  { font-size: 17px; font-weight: 600; }
+  .modal-sub    { font-size: 13px; color: var(--muted); margin-top: 3px; }
+  .modal-close  { background: none; border: none; cursor: pointer; color: var(--muted); padding: 2px; }
+  .modal-close svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; }
+  .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 24px; }
+
+  /* ── Forms ── */
+  .form-group  { margin-bottom: 16px; }
+  .form-label  {
+    display: block; font-size: 11px; font-weight: 600;
+    color: var(--muted); text-transform: uppercase; letter-spacing: .6px; margin-bottom: 6px;
+  }
+  .form-input, .form-select {
+    width: 100%; padding: 9px 13px; border: 1px solid var(--border);
+    border-radius: 8px; font-size: 14px; font-family: inherit;
+    background: var(--surface); color: var(--text);
+    outline: none; transition: border-color .15s, box-shadow .15s;
+    appearance: none;
+  }
+  .form-input:focus, .form-select:focus {
+    border-color: var(--green-400);
+    box-shadow: 0 0 0 3px rgba(99,153,34,.1);
+  }
+  .form-row    { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .form-hint   { font-size: 11px; color: var(--muted); margin-top: 4px; }
+
+  /* ── Alerts ── */
+  .alert       { padding: 10px 14px; border-radius: 8px; font-size: 13px; margin-bottom: 14px; }
+  .alert-red   { background: var(--red-50);   color: var(--red-800);   border: 1px solid var(--red-100); }
+  .alert-green { background: var(--green-50); color: var(--green-800); border: 1px solid var(--green-100); }
+  .alert-teal  { background: var(--teal-50);  color: var(--teal-800);  border: 1px solid var(--teal-100); }
+  .alert-amber { background: var(--amber-50); color: var(--amber-600); border: 1px solid var(--amber-200); }
+
+  /* ── Login ── */
+  .login-wrap {
+    min-height: 100vh; display: flex;
+    align-items: center; justify-content: center;
+    background: var(--green-900);
+  }
+  .login-box {
+    background: #fff; border-radius: 20px;
+    padding: 40px; width: 420px; max-width: 96vw;
+  }
+  .login-logo       { display: flex; align-items: center; gap: 12px; margin-bottom: 32px; }
+  .login-logo-icon  {
+    width: 44px; height: 44px; background: var(--green-600);
+    border-radius: 12px; display: flex; align-items: center; justify-content: center;
+  }
+  .login-logo-icon svg { width: 22px; height: 22px; stroke: #fff; fill: none; stroke-width: 1.8; }
+  .login-brand-name  { font-size: 22px; font-weight: 700; color: var(--green-900); }
+  .login-brand-sub   { font-size: 13px; color: var(--green-600); margin-top: 1px; }
+  .login-btn {
+    width: 100%; padding: 12px; background: var(--green-600); color: #fff;
+    border: none; border-radius: 9px; font-size: 15px; font-weight: 600;
+    font-family: inherit; cursor: pointer; margin-top: 6px; transition: .15s;
+  }
+  .login-btn:hover    { background: var(--green-800); }
+  .login-btn:disabled { opacity: .6; cursor: not-allowed; }
+
+  /* ── Misc ── */
+  .type-chip {
+    font-family: 'DM Mono', monospace; font-size: 11px;
+    padding: 2px 7px; border-radius: 5px;
+    background: var(--gray-50); color: var(--gray-600);
+  }
+  .empty-state { text-align: center; padding: 52px 20px; }
+  .empty-icon  { font-size: 38px; margin-bottom: 12px; opacity: .35; }
+  .empty-text  { color: var(--muted); font-size: 14px; }
+  .loading-block {
+    display: flex; align-items: center; justify-content: center;
+    padding: 64px; gap: 12px; color: var(--muted); font-size: 14px;
+  }
+  .id-mono { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); }
+
+  /* ── Spinner ── */
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .spinner {
+    display: inline-block; width: 16px; height: 16px;
+    border: 2px solid rgba(255,255,255,.3);
+    border-top-color: #fff; border-radius: 50%;
+    animation: spin .7s linear infinite;
+  }
+  .spinner-dark { border-color: rgba(0,0,0,.12); border-top-color: var(--green-600); }
+
+  /* ── Config banner ── */
+  .config-banner {
+    background: var(--amber-50); border: 1px solid var(--amber-200);
+    border-radius: 10px; padding: 12px 16px; margin-bottom: 18px;
+    font-size: 13px; color: var(--amber-600);
+    display: flex; align-items: flex-start; gap: 10px;
+  }
+  .config-banner svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; flex-shrink: 0; margin-top: 1px; }
+  .info-box {
+    background: var(--teal-50); border: 1px solid var(--teal-100);
+    border-radius: 10px; padding: 12px 16px; margin-bottom: 18px;
+    font-size: 13px; color: var(--teal-800);
+  }
+  code {
+    font-family: 'DM Mono', monospace; font-size: 11px;
+    background: rgba(0,0,0,.06); padding: 1px 5px; border-radius: 4px;
+  }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/react@18/umd/react.production.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@babel/standalone@7/babel.min.js"></script>
+
+<script type="text/babel">
+const { useState, useEffect, useCallback, useRef } = React;
+
+/* ═══════════════════════════════════════════════════════════════
+   ICONS
+═══════════════════════════════════════════════════════════════ */
+const Icons = {
+  leaf: (
+    <svg viewBox="0 0 24 24"><path d="M12 20V10c0-5 4-8 8-8-1 9-6 13-8 14M12 20C10 18 5 14 4 5c4 0 8 3 8 5"/></svg>
+  ),
+  building: (
+    <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9h.01M15 9h.01M9 15h.01M15 15h.01"/></svg>
+  ),
+  users: (
+    <svg viewBox="0 0 24 24"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/><path d="M16 3.13a4 4 0 0 1 0 7.75M21 21v-2a4 4 0 0 0-3-3.87"/></svg>
+  ),
+  home: (
+    <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+  ),
+  plus: (
+    <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+  ),
+  power: (
+    <svg viewBox="0 0 24 24"><path d="M18.36 6.64a9 9 0 1 1-12.73 0M12 2v10"/></svg>
+  ),
+  logout: (
+    <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+  ),
+  x: (
+    <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+  ),
+  warn: (
+    <svg viewBox="0 0 24 24"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+  ),
+  refresh: (
+    <svg viewBox="0 0 24 24"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+  ),
+  check: (
+    <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+  ),
+};
+
+/* ═══════════════════════════════════════════════════════════════
+   API HOOK
+═══════════════════════════════════════════════════════════════ */
+function useApi(baseUrl) {
+  // Store token in ref so callbacks don't need to be recreated on token change
+  const tokenRef = useRef(null);
+  const [token, setTokenState] = useState(null);
+
+  const setToken = useCallback((t) => {
+    tokenRef.current = t;
+    setTokenState(t);
+  }, []);
+
+  const request = useCallback(async (method, path, body = undefined, auth = true) => {
+    const headers = { 'Content-Type': 'application/json' };
+    if (auth && tokenRef.current) headers['Authorization'] = `Bearer ${tokenRef.current}`;
+    const opts = { method, headers };
+    if (body !== undefined) opts.body = JSON.stringify(body);
+    const res = await fetch(`${baseUrl}${path}`, opts);
+    if (res.status === 204) return null;
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.message || data.error || `HTTP ${res.status}`);
+    return data;
+  }, [baseUrl]);
+
+  const api = {
+    token,
+    setToken,
+    login:           (email, password)         => request('POST',   '/auth/login',             { email, password }, false),
+    getTenants:      ()                         => request('GET',    '/api/tenants'),
+    createTenant:    (body)                     => request('POST',   '/api/tenants',             body),
+    disableTenant:   (id)                       => request('PATCH',  `/api/tenants/${id}/disable`),
+    listRoles:       ()                         => request('GET',    '/api/tenants/current/roles'),
+    assignRole:      (userId, role, assignedBy, tenantId) =>
+                                                   request('POST',   '/api/tenants/current/roles', { userId, role, assignedBy, tenantId }),
+    revokeRole:      (userTenantRoleId)         => request('DELETE', `/api/tenants/current/roles/${userTenantRoleId}`),
+    getUsers:        ()                         => request('GET',    '/users?size=100'),
+    registerUser:    (body)                     => request('POST',   '/users/register',           body),
+  };
+
+  return api;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   MODAL WRAPPER
+═══════════════════════════════════════════════════════════════ */
+function Modal({ title, subtitle, onClose, children }) {
+  return (
+    <div className="overlay" onClick={e => e.target === e.currentTarget && onClose()}>
+      <div className="modal">
+        <div className="modal-head">
+          <div>
+            <div className="modal-title">{title}</div>
+            {subtitle && <div className="modal-sub">{subtitle}</div>}
+          </div>
+          <button className="modal-close" onClick={onClose}>{Icons.x}</button>
+        </div>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   LOGIN PAGE
+═══════════════════════════════════════════════════════════════ */
+function LoginPage({ api, onLogin, baseUrl, onBaseUrlChange }) {
+  const [email, setEmail]       = useState('jefe@eco.com');
+  const [password, setPassword] = useState('1234');
+  const [loading, setLoading]   = useState(false);
+  const [error, setError]       = useState(null);
+  const [showUrlEdit, setShowUrlEdit] = useState(false);
+  const [tempUrl, setTempUrl]   = useState(baseUrl);
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    setLoading(true); setError(null);
+    try {
+      const data = await api.login(email, password);
+      onLogin(data.token, email);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <div className="login-wrap">
+      <div className="login-box">
+        <div className="login-logo">
+          <div className="login-logo-icon">{Icons.leaf}</div>
+          <div>
+            <div className="login-brand-name">EcoCircular</div>
+            <div className="login-brand-sub">Panel de Administración</div>
+          </div>
+        </div>
+
+        {/* API URL banner */}
+        <div className="config-banner">
+          {Icons.warn}
+          <div style={{ flex: 1 }}>
+            <strong>Servidor:</strong> <code>{baseUrl}</code>
+            <button
+              onClick={() => setShowUrlEdit(!showUrlEdit)}
+              style={{ marginLeft: 8, background: 'none', border: 'none', cursor: 'pointer',
+                       color: 'inherit', textDecoration: 'underline', fontSize: 12, fontFamily: 'inherit' }}>
+              {showUrlEdit ? 'ocultar' : 'cambiar'}
+            </button>
+          </div>
+        </div>
+
+        {showUrlEdit && (
+          <div className="form-group">
+            <label className="form-label">URL base del API</label>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <input
+                className="form-input"
+                value={tempUrl}
+                onChange={e => setTempUrl(e.target.value)}
+                placeholder="http://localhost:8080"
+              />
+              <button
+                className="btn btn-primary btn-sm"
+                onClick={() => { onBaseUrlChange(tempUrl); setShowUrlEdit(false); }}>
+                Guardar
+              </button>
+            </div>
+            <div className="form-hint">La URL se guarda solo para esta sesión del navegador.</div>
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit}>
+          {error && <div className="alert alert-red">{error}</div>}
+
+          <div className="form-group">
+            <label className="form-label">Correo electrónico</label>
+            <input
+              className="form-input" type="email" required
+              value={email} onChange={e => setEmail(e.target.value)}
+            />
+          </div>
+
+          <div className="form-group">
+            <label className="form-label">Contraseña</label>
+            <input
+              className="form-input" type="password" required
+              value={password} onChange={e => setPassword(e.target.value)}
+            />
+          </div>
+
+          <button className="login-btn" type="submit" disabled={loading}>
+            {loading ? <><span className="spinner" style={{ width: 14, height: 14 }} /> Ingresando…</> : 'Ingresar'}
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   DASHBOARD HOME
+═══════════════════════════════════════════════════════════════ */
+function DashboardPage({ tenants, users }) {
+  const active   = tenants.filter(t => t.active).length;
+  const inactive = tenants.filter(t => !t.active).length;
+
+  return (
+    <div>
+      <div className="stat-grid">
+        <div className="stat-card">
+          <div className="stat-label">Tenants registrados</div>
+          <div className="stat-value">{tenants.length}</div>
+          <div className="stat-badge">{active} activos</div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-label">Administradores</div>
+          <div className="stat-value">{users.length}</div>
+          <div className="stat-badge" style={{ background: 'var(--teal-50)', color: 'var(--teal-800)' }}>
+            usuarios registrados
+          </div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-label">Tenants inactivos</div>
+          <div className="stat-value">{inactive}</div>
+          <div className="stat-badge" style={{ background: 'var(--gray-50)', color: 'var(--gray-600)' }}>
+            deshabilitados
+          </div>
+        </div>
+      </div>
+
+      <div className="table-card">
+        <div className="table-header">
+          <span className="table-title">Tenants recientes</span>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Nombre</th><th>Tipo</th><th>Estado</th>
+            </tr>
+          </thead>
+          <tbody>
+            {tenants.slice(0, 6).map(t => (
+              <tr key={t.id}>
+                <td>
+                  <div style={{ fontWeight: 500 }}>{t.name}</div>
+                  <div className="id-mono">{t.id?.substring(0, 8)}…</div>
+                </td>
+                <td><span className="type-chip">{t.type}</span></td>
+                <td>
+                  <span className={`badge ${t.active ? 'badge-green' : 'badge-gray'}`}>
+                    {t.active ? 'Activo' : 'Inactivo'}
+                  </span>
+                </td>
+              </tr>
+            ))}
+            {tenants.length === 0 && (
+              <tr><td colSpan={3}>
+                <div className="empty-state">
+                  <div className="empty-icon">🏢</div>
+                  <div className="empty-text">No hay tenants registrados aún</div>
+                </div>
+              </td></tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   TENANTS PAGE
+═══════════════════════════════════════════════════════════════ */
+function TenantsPage({ tenants, onRefresh, api }) {
+  const [showModal, setShowModal]   = useState(false);
+  const [form, setForm]             = useState({ name: '', type: 'MUNICIPALITY' });
+  const [loading, setLoading]       = useState(false);
+  const [disabling, setDisabling]   = useState(null);
+  const [error, setError]           = useState(null);
+  const [success, setSuccess]       = useState(null);
+
+  const TYPES = ['MUNICIPALITY', 'RECYCLER', 'COMPANY', 'ADMIN'];
+
+  async function handleCreate(e) {
+    e.preventDefault();
+    setLoading(true); setError(null);
+    try {
+      await api.createTenant({
+        name: form.name,
+        type: form.type,
+        active: true,
+        createdAt: new Date().toISOString(),
+      });
+      setSuccess(`Tenant "${form.name}" creado exitosamente.`);
+      setForm({ name: '', type: 'MUNICIPALITY' });
+      setShowModal(false);
+      onRefresh();
+      setTimeout(() => setSuccess(null), 5000);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleDisable(id, name) {
+    if (!window.confirm(`¿Deshabilitar el tenant "${name}"? Esta acción no se puede deshacer fácilmente.`)) return;
+    setDisabling(id);
+    try {
+      await api.disableTenant(id);
+      setSuccess(`Tenant "${name}" deshabilitado.`);
+      onRefresh();
+      setTimeout(() => setSuccess(null), 4000);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setDisabling(null);
+    }
+  }
+
+  return (
+    <div>
+      {success && <div className="alert alert-green">{Icons.check} &nbsp;{success}</div>}
+      {error   && <div className="alert alert-red">{error}</div>}
+
+      <div className="table-card">
+        <div className="table-header">
+          <span className="table-title">Todos los tenants ({tenants.length})</span>
+          <button className="btn btn-primary btn-sm" onClick={() => { setError(null); setShowModal(true); }}>
+            {Icons.plus} Nuevo tenant
+          </button>
+        </div>
+        <table>
+          <thead>
+            <tr><th>Nombre</th><th>ID</th><th>Tipo</th><th>Estado</th><th>Acciones</th></tr>
+          </thead>
+          <tbody>
+            {tenants.map(t => (
+              <tr key={t.id}>
+                <td style={{ fontWeight: 500 }}>{t.name}</td>
+                <td><span className="id-mono">{t.id?.substring(0, 12)}…</span></td>
+                <td><span className="type-chip">{t.type}</span></td>
+                <td>
+                  <span className={`badge ${t.active ? 'badge-green' : 'badge-gray'}`}>
+                    {t.active ? 'Activo' : 'Inactivo'}
+                  </span>
+                </td>
+                <td>
+                  {t.active && (
+                    <button
+                      className="btn btn-danger btn-sm"
+                      disabled={disabling === t.id}
+                      onClick={() => handleDisable(t.id, t.name)}>
+                      {disabling === t.id
+                        ? <span className="spinner spinner-dark" style={{ width: 12, height: 12 }} />
+                        : Icons.power}
+                      Deshabilitar
+                    </button>
+                  )}
+                </td>
+              </tr>
+            ))}
+            {tenants.length === 0 && (
+              <tr><td colSpan={5}>
+                <div className="empty-state">
+                  <div className="empty-icon">🏢</div>
+                  <div className="empty-text">No hay tenants registrados. Crea el primero.</div>
+                </div>
+              </td></tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {showModal && (
+        <Modal
+          title="Crear nuevo tenant"
+          subtitle="Un tenant representa un municipio u organización participante"
+          onClose={() => setShowModal(false)}>
+          {error && <div className="alert alert-red">{error}</div>}
+          <form onSubmit={handleCreate}>
+            <div className="form-group">
+              <label className="form-label">Nombre del tenant</label>
+              <input
+                className="form-input" required
+                placeholder="Municipio de La Paz"
+                value={form.name}
+                onChange={e => setForm({ ...form, name: e.target.value })}
+              />
+            </div>
+            <div className="form-group">
+              <label className="form-label">Tipo</label>
+              <select
+                className="form-select"
+                value={form.type}
+                onChange={e => setForm({ ...form, type: e.target.value })}>
+                {TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+              </select>
+              <div className="form-hint">
+                MUNICIPALITY = municipio local · RECYCLER = empresa recicladora · COMPANY = empresa privada
+              </div>
+            </div>
+            <div className="modal-actions">
+              <button type="button" className="btn btn-outline" onClick={() => setShowModal(false)}>Cancelar</button>
+              <button type="submit" className="btn btn-primary" disabled={loading}>
+                {loading
+                  ? <><span className="spinner" style={{ width: 13, height: 13 }} /> Creando…</>
+                  : <>{Icons.plus} Crear tenant</>}
+              </button>
+            </div>
+          </form>
+        </Modal>
+      )}
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   USERS PAGE
+═══════════════════════════════════════════════════════════════ */
+function UsersPage({ users, tenants, onRefresh, api }) {
+  const [showModal, setShowModal] = useState(false);
+  const [form, setForm]           = useState({ email: '', displayName: '', password: '', activeTenantId: '' });
+  const [loading, setLoading]     = useState(false);
+  const [error, setError]         = useState(null);
+  const [success, setSuccess]     = useState(null);
+
+  const activeTenants = tenants.filter(t => t.active && t.type !== 'ADMIN');
+
+  async function handleCreate(e) {
+    e.preventDefault();
+    setLoading(true); setError(null);
+    try {
+      const newUser = await api.registerUser({
+        email:           form.email,
+        displayName:     form.displayName,
+        password:        form.password,
+        activeTenantId:  form.activeTenantId || null,
+      });
+
+      // Si hay tenant seleccionado, asignar el rol automáticamente
+      if (form.activeTenantId && newUser?.id) {
+        try {
+          await api.assignRole(newUser.id, 'ROLE_MUNICIPALITY_ADMIN', newUser.id, form.activeTenantId);
+          setSuccess(`✓ Usuario "${form.displayName}" creado y rol ROLE_MUNICIPALITY_ADMIN asignado.`);
+        } catch {
+          setSuccess(`✓ Usuario "${form.displayName}" creado. Asigna el rol manualmente si es necesario.`);
+        }
+      } else {
+        setSuccess(`✓ Usuario "${form.displayName}" creado. Asígnale un tenant y rol desde la sección Tenants.`);
+      }
+
+      setForm({ email: '', displayName: '', password: '', activeTenantId: '' });
+      setShowModal(false);
+      onRefresh();
+      setTimeout(() => setSuccess(null), 7000);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <div>
+      {success && <div className="alert alert-green">{success}</div>}
+      {error   && !showModal && <div className="alert alert-red">{error}</div>}
+
+      <div className="info-box">
+        <strong>Flujo recomendado:</strong>&nbsp;
+        1) Crea el tenant (menú Tenants) →&nbsp;
+        2) Crea el usuario aquí y asígnalo al tenant →&nbsp;
+        el sistema intentará asignar <code>ROLE_MUNICIPALITY_ADMIN</code> automáticamente.
+      </div>
+
+      <div className="table-card">
+        <div className="table-header">
+          <span className="table-title">Usuarios registrados ({users.length})</span>
+          <button className="btn btn-primary btn-sm" onClick={() => { setError(null); setShowModal(true); }}>
+            {Icons.plus} Nuevo administrador
+          </button>
+        </div>
+        <table>
+          <thead>
+            <tr><th>Nombre</th><th>Correo</th><th>Tenant activo</th></tr>
+          </thead>
+          <tbody>
+            {users.map(u => (
+              <tr key={u.id}>
+                <td>
+                  <div style={{ fontWeight: 500 }}>{u.displayName}</div>
+                  <div className="id-mono">{u.id?.substring(0, 10)}…</div>
+                </td>
+                <td style={{ color: 'var(--muted)', fontSize: 13 }}>{u.email}</td>
+                <td>
+                  {u.activeTenantName
+                    ? <span className="badge badge-green">{u.activeTenantName}</span>
+                    : <span className="badge badge-gray">Sin tenant</span>}
+                </td>
+              </tr>
+            ))}
+            {users.length === 0 && (
+              <tr><td colSpan={3}>
+                <div className="empty-state">
+                  <div className="empty-icon">👤</div>
+                  <div className="empty-text">No hay usuarios registrados aún.</div>
+                </div>
+              </td></tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {showModal && (
+        <Modal
+          title="Crear administrador municipal"
+          subtitle="Se registrará con rol ROLE_MUNICIPALITY_ADMIN"
+          onClose={() => setShowModal(false)}>
+          {error && <div className="alert alert-red">{error}</div>}
+          <form onSubmit={handleCreate}>
+            <div className="form-group">
+              <label className="form-label">Nombre completo</label>
+              <input
+                className="form-input" required
+                placeholder="Ana García López"
+                value={form.displayName}
+                onChange={e => setForm({ ...form, displayName: e.target.value })}
+              />
+            </div>
+            <div className="form-row">
+              <div className="form-group">
+                <label className="form-label">Correo electrónico</label>
+                <input
+                  className="form-input" type="email" required
+                  placeholder="admin@municipio.gob.bo"
+                  value={form.email}
+                  onChange={e => setForm({ ...form, email: e.target.value })}
+                />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Contraseña</label>
+                <input
+                  className="form-input" type="password" required
+                  placeholder="mínimo 8 caracteres"
+                  minLength={8}
+                  value={form.password}
+                  onChange={e => setForm({ ...form, password: e.target.value })}
+                />
+              </div>
+            </div>
+            <div className="form-group">
+              <label className="form-label">
+                Tenant asignado&nbsp;
+                <span style={{ color: 'var(--muted)', textTransform: 'none', fontWeight: 400, letterSpacing: 0 }}>
+                  (opcional — asigna el rol automáticamente)
+                </span>
+              </label>
+              <select
+                className="form-select"
+                value={form.activeTenantId}
+                onChange={e => setForm({ ...form, activeTenantId: e.target.value })}>
+                <option value="">— Sin tenant por ahora —</option>
+                {activeTenants.map(t => (
+                  <option key={t.id} value={t.id}>{t.name} ({t.type})</option>
+                ))}
+              </select>
+              {activeTenants.length === 0 && (
+                <div className="form-hint" style={{ color: 'var(--amber-600)' }}>
+                  No hay tenants activos. Crea uno primero en la sección Tenants.
+                </div>
+              )}
+            </div>
+            <div className="modal-actions">
+              <button type="button" className="btn btn-outline" onClick={() => setShowModal(false)}>Cancelar</button>
+              <button type="submit" className="btn btn-primary" disabled={loading}>
+                {loading
+                  ? <><span className="spinner" style={{ width: 13, height: 13 }} /> Creando…</>
+                  : <>{Icons.plus} Crear usuario</>}
+              </button>
+            </div>
+          </form>
+        </Modal>
+      )}
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   SIDEBAR + LAYOUT
+═══════════════════════════════════════════════════════════════ */
+const NAV_PAGES = [
+  { id: 'home',    label: 'Inicio',             icon: Icons.home,     title: 'Inicio',               sub: 'Resumen del sistema' },
+  { id: 'tenants', label: 'Tenants',             icon: Icons.building, title: 'Tenants',              sub: 'Gestión de organizaciones y municipios' },
+  { id: 'users',   label: 'Administradores',     icon: Icons.users,    title: 'Administradores',      sub: 'Usuarios con acceso municipal' },
+];
+
+function AppShell({ userEmail, onLogout, children, page, setPage, loadingData, onRefresh }) {
+  const current = NAV_PAGES.find(p => p.id === page) || NAV_PAGES[0];
+  return (
+    <div className="app-shell">
+      {/* Sidebar */}
+      <aside className="sidebar">
+        <div className="sidebar-logo">
+          <div className="logo-mark">
+            <div className="logo-icon">{Icons.leaf}</div>
+            <div>
+              <div className="logo-text">EcoCircular</div>
+              <div className="logo-sub">Admin Panel</div>
+            </div>
+          </div>
+        </div>
+
+        <nav className="sidebar-nav">
+          <div className="nav-section">
+            <div className="nav-label">Navegación</div>
+            {NAV_PAGES.map(p => (
+              <button
+                key={p.id}
+                className={`nav-item ${page === p.id ? 'active' : ''}`}
+                onClick={() => setPage(p.id)}>
+                {p.icon} {p.label}
+              </button>
+            ))}
+          </div>
+        </nav>
+
+        <div className="sidebar-footer">
+          <div className="user-pill">
+            <div className="user-avatar">{userEmail[0]?.toUpperCase() || 'A'}</div>
+            <div className="user-info">
+              <div className="user-name">{userEmail}</div>
+              <div className="user-role">Super Admin</div>
+            </div>
+            <button className="logout-btn" title="Cerrar sesión" onClick={onLogout}>
+              {Icons.logout}
+            </button>
+          </div>
+        </div>
+      </aside>
+
+      {/* Main */}
+      <div className="main-content">
+        <div className="topbar">
+          <div>
+            <div className="page-title">{current.title}</div>
+            <div className="page-sub">{current.sub}</div>
+          </div>
+          <button className="btn btn-outline btn-sm" onClick={onRefresh} disabled={loadingData}>
+            {loadingData
+              ? <span className="spinner spinner-dark" style={{ width: 13, height: 13 }} />
+              : Icons.refresh}
+            Actualizar
+          </button>
+        </div>
+        <div className="content-area">
+          {loadingData
+            ? <div className="loading-block">
+                <span className="spinner spinner-dark" style={{ width: 22, height: 22 }} />
+                Cargando datos…
+              </div>
+            : children}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   ROOT APP
+═══════════════════════════════════════════════════════════════ */
+function App() {
+  const [baseUrl, setBaseUrl]     = useState(() => localStorage.getItem('eco_base_url') || 'http://localhost:8080');
+  const api                       = useApi(baseUrl);
+  const [loggedIn, setLoggedIn]   = useState(false);
+  const [userEmail, setUserEmail] = useState('');
+  const [page, setPage]           = useState('home');
+  const [tenants, setTenants]     = useState([]);
+  const [users, setUsers]         = useState([]);
+  const [loadingData, setLoadingData] = useState(false);
+
+  function handleBaseUrlChange(url) {
+    localStorage.setItem('eco_base_url', url);
+    setBaseUrl(url);
+  }
+
+  function handleLogin(token, email) {
+    api.setToken(token);
+    setUserEmail(email);
+    setLoggedIn(true);
+  }
+
+  function handleLogout() {
+    api.setToken(null);
+    setLoggedIn(false);
+    setTenants([]);
+    setUsers([]);
+    setPage('home');
+  }
+
+  async function loadData() {
+    setLoadingData(true);
+    try {
+      const [tResult, uResult] = await Promise.allSettled([
+        api.getTenants(),
+        api.getUsers(),
+      ]);
+
+      if (tResult.status === 'fulfilled') {
+        const raw = tResult.value;
+        setTenants(Array.isArray(raw) ? raw : (raw?.content || []));
+      }
+      if (uResult.status === 'fulfilled') {
+        const raw = uResult.value;
+        setUsers(Array.isArray(raw) ? raw : (raw?.content || []));
+      }
+    } finally {
+      setLoadingData(false);
+    }
+  }
+
+  useEffect(() => {
+    if (loggedIn) loadData();
+  }, [loggedIn]);
+
+  if (!loggedIn) {
+    return (
+      <LoginPage
+        api={api}
+        onLogin={handleLogin}
+        baseUrl={baseUrl}
+        onBaseUrlChange={handleBaseUrlChange}
+      />
+    );
+  }
+
+  return (
+    <AppShell
+      userEmail={userEmail}
+      onLogout={handleLogout}
+      page={page}
+      setPage={setPage}
+      loadingData={loadingData}
+      onRefresh={loadData}>
+
+      {page === 'home' && (
+        <DashboardPage tenants={tenants} users={users} />
+      )}
+      {page === 'tenants' && (
+        <TenantsPage tenants={tenants} onRefresh={loadData} api={api} />
+      )}
+      {page === 'users' && (
+        <UsersPage users={users} tenants={tenants} onRefresh={loadData} api={api} />
+      )}
+    </AppShell>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>
