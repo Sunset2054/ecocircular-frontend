@@ -167,3 +167,69 @@ export async function updateMaterial(id, data) {
 export async function deactivateMaterial(id) {
   return apiFetch(`/api/materials/${id}`, { method: 'DELETE' })
 }
+// ─────────────────────────────────────────────────────────────────────────────
+// GAMIFICATION  →  /api/gamification
+// ─────────────────────────────────────────────────────────────────────────────
+
+// Resumen general del usuario (nivel, puntos, CO2, badges ganados, misiones activas)
+export async function getGamificationSummary(userId) {
+  return apiFetch(`/api/gamification/users/${userId}`)
+}
+
+// Badges ganados por el usuario
+export async function getUserBadges(userId) {
+  return apiFetch(`/api/gamification/users/${userId}/badges`)
+}
+
+// Misiones activas y completadas
+export async function getUserMissions(userId) {
+  return apiFetch(`/api/gamification/users/${userId}/missions`)
+}
+
+// Recomendaciones personalizadas
+export async function getUserRecommendations(userId) {
+  return apiFetch(`/api/gamification/users/${userId}/recommendation`)
+}
+
+// Ranking del tenant
+export async function getRanking(scope = 'GLOBAL') {
+  return apiFetch(`/api/gamification/ranking?scope=${scope}`)
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// GAMIFICATION ADMIN  →  /api/gamification/admin
+// ─────────────────────────────────────────────────────────────────────────────
+
+export async function listAdminBadges() {
+  return apiFetch('/api/gamification/admin/badges')
+}
+export async function createAdminBadge(data) {
+  return apiFetch('/api/gamification/admin/badges', {
+    method: 'POST', body: JSON.stringify(data),
+  })
+}
+export async function updateAdminBadge(id, data) {
+  return apiFetch(`/api/gamification/admin/badges/${id}`, {
+    method: 'PUT', body: JSON.stringify(data),
+  })
+}
+export async function deactivateAdminBadge(id) {
+  return apiFetch(`/api/gamification/admin/badges/${id}`, { method: 'DELETE' })
+}
+
+export async function listAdminMissions() {
+  return apiFetch('/api/gamification/admin/missions')
+}
+export async function createAdminMission(data) {
+  return apiFetch('/api/gamification/admin/missions', {
+    method: 'POST', body: JSON.stringify(data),
+  })
+}
+export async function updateAdminMission(id, data) {
+  return apiFetch(`/api/gamification/admin/missions/${id}`, {
+    method: 'PUT', body: JSON.stringify(data),
+  })
+}
+export async function deactivateAdminMission(id) {
+  return apiFetch(`/api/gamification/admin/missions/${id}`, { method: 'DELETE' })
+}

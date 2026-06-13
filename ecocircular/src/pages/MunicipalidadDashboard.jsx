@@ -6,7 +6,17 @@ import {
   PieChart, Pie, Cell, Legend,
 } from 'recharts'
 import { Modal, Box, TextField, Button } from '@mui/material' // O cualquier librería de UI
-import { getToken } from '../api'
+import {
+  getToken,
+  listAdminBadges,
+  createAdminBadge,
+  updateAdminBadge,
+  deactivateAdminBadge,
+  listAdminMissions,
+  createAdminMission,
+  updateAdminMission,
+  deactivateAdminMission,
+} from '../api'
 import { useCurrentUser } from '../hooks/useCurrentUser'
 
 // Colores fijos para materiales (se puede mapear dinámicamente)
@@ -38,6 +48,26 @@ export default function MunicipalidadDashboard() {
   const [matModalOpen, setMatModalOpen] = useState(false)
   const [editingGP, setEditingGP] = useState(null)   // null = crear, objeto = editar
   const [editingMat, setEditingMat] = useState(null)
+  const [badgesModalOpen, setBadgesModalOpen] = useState(false)
+const [missionsModalOpen, setMissionsModalOpen] = useState(false)
+const [adminBadges, setAdminBadges] = useState([])
+const [adminMissions, setAdminMissions] = useState([])
+const [editingBadge, setEditingBadge] = useState(null)
+const [editingMission, setEditingMission] = useState(null)
+
+const openBadgesModal = async () => {
+  const data = await listAdminBadges()
+  setAdminBadges(data)
+  setEditingBadge(null)
+  setBadgesModalOpen(true)
+}
+
+const openMissionsModal = async () => {
+  const data = await listAdminMissions()
+  setAdminMissions(data)
+  setEditingMission(null)
+  setMissionsModalOpen(true)
+}
 
   // Token de autenticación (ajusta según tu estrategia)
   const token = getToken() || ''
@@ -163,11 +193,13 @@ export default function MunicipalidadDashboard() {
         </div>
 
         {/* Gestión de puntos verdes y materiales */}
-        <div style={{ display: 'flex', gap: 12, marginBottom: 28 }}>
-          <button onClick={openCreateGP} style={actionButtonStyle}>+ Añadir Punto Verde</button>
-          <button onClick={openCreateMat} style={actionButtonStyle}>+ Añadir Material</button>
-          <button onClick={openOperatorModal} style={actionButtonStyle}>+ Asignar Operador</button>
-        </div>
+        <div style={{ display: 'flex', gap: 12, marginBottom: 28, flexWrap: 'wrap' }}>
+  <button onClick={openCreateGP} style={actionButtonStyle}>+ Añadir Punto Verde</button>
+  <button onClick={openCreateMat} style={actionButtonStyle}>+ Añadir Material</button>
+  <button onClick={openOperatorModal} style={actionButtonStyle}>+ Asignar Operador</button>
+  <button onClick={openBadgesModal} style={actionButtonStyle}>🏅 Insignias</button>
+  <button onClick={openMissionsModal} style={actionButtonStyle}>🎯 Misiones</button>
+</div>
 
         {/* Gráficos */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: 20 }}>
@@ -331,6 +363,113 @@ export default function MunicipalidadDashboard() {
           />
         </Box>
       </Modal>
+      {/* Modal Insignias */}
+<Modal open={badgesModalOpen} onClose={() => setBadgesModalOpen(false)}>
+  <Box sx={{ ...modalStyle, width: 500 }}>
+    <h2 style={{ marginBottom: 16, fontSize: 18, fontWeight: 700, color: '#1A3D2B' }}>
+      🏅 Gestionar Insignias
+    </h2>
+
+    {/* Lista de insignias existentes */}
+    <div style={{ maxHeight: 200, overflowY: 'auto', marginBottom: 16 }}>
+      {adminBadges.map(b => (
+        <div key={b.id} style={{
+          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+          padding: '8px 0', borderBottom: '1px solid #E0EDE6',
+        }}>
+          <div>
+            <span style={{ fontWeight: 600, fontSize: 14, color: '#1A3D2B' }}>{b.name}</span>
+            <span style={{ fontSize: 11, color: '#8A9E92', marginLeft: 8 }}>{b.iconCode}</span>
+          </div>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button
+              onClick={() => setEditingBadge(b)}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#2E7D52', fontSize: 13 }}
+            >
+              ✎ Editar
+            </button>
+            <button
+              onClick={async () => {
+                await deactivateAdminBadge(b.id)
+                const data = await listAdminBadges()
+                setAdminBadges(data)
+              }}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#C0392B', fontSize: 13 }}
+            >
+              ✕ Desactivar
+            </button>
+          </div>
+        </div>
+      ))}
+    </div>
+
+    {/* Formulario crear / editar */}
+    <BadgeAdminForm
+      initialData={editingBadge}
+      token={token}
+      onSaved={async () => {
+        const data = await listAdminBadges()
+        setAdminBadges(data)
+        setEditingBadge(null)
+      }}
+    />
+  </Box>
+</Modal>
+
+{/* Modal Misiones */}
+<Modal open={missionsModalOpen} onClose={() => setMissionsModalOpen(false)}>
+  <Box sx={{ ...modalStyle, width: 500 }}>
+    <h2 style={{ marginBottom: 16, fontSize: 18, fontWeight: 700, color: '#1A3D2B' }}>
+      🎯 Gestionar Misiones
+    </h2>
+
+    {/* Lista de misiones existentes */}
+    <div style={{ maxHeight: 200, overflowY: 'auto', marginBottom: 16 }}>
+      {adminMissions.map(m => (
+        <div key={m.id} style={{
+          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+          padding: '8px 0', borderBottom: '1px solid #E0EDE6',
+        }}>
+          <div>
+            <span style={{ fontWeight: 600, fontSize: 14, color: '#1A3D2B' }}>{m.name}</span>
+            <span style={{ fontSize: 11, color: '#8A9E92', marginLeft: 8 }}>
+              {m.targetType} → {m.targetValue}
+            </span>
+          </div>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button
+              onClick={() => setEditingMission(m)}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#2E7D52', fontSize: 13 }}
+            >
+              ✎ Editar
+            </button>
+            <button
+              onClick={async () => {
+                await deactivateAdminMission(m.id)
+                const data = await listAdminMissions()
+                setAdminMissions(data)
+              }}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#C0392B', fontSize: 13 }}
+            >
+              ✕ Desactivar
+            </button>
+          </div>
+        </div>
+      ))}
+    </div>
+
+    {/* Formulario crear / editar */}
+    <MissionAdminForm
+      initialData={editingMission}
+      token={token}
+      onSaved={async () => {
+        const data = await listAdminMissions()
+        setAdminMissions(data)
+        setEditingMission(null)
+      }}
+    />
+  </Box>
+</Modal>
     </div>
   )
 }
@@ -669,6 +808,168 @@ function OperatorForm({ onSuccess, token, tenantId }) {
 
       <Button type="submit" variant="contained" color="primary" disabled={loading}>
         {loading ? 'Procesando...' : mode === 'existing' ? 'Asignar rol' : 'Crear y asignar'}
+      </Button>
+    </form>
+  )
+}
+function BadgeAdminForm({ initialData, onSaved }) {
+  const [form, setForm] = useState({
+    name: initialData?.name || '',
+    description: initialData?.description || '',
+    iconCode: initialData?.iconCode || '',
+  })
+
+  useEffect(() => {
+    if (initialData) {
+      setForm({
+        name: initialData.name || '',
+        description: initialData.description || '',
+        iconCode: initialData.iconCode || '',
+      })
+    } else {
+      setForm({ name: '', description: '', iconCode: '' })
+    }
+  }, [initialData])
+
+  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value })
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    if (initialData) {
+      await updateAdminBadge(initialData.id, form)
+    } else {
+      await createAdminBadge(form)
+    }
+    onSaved()
+  }
+
+  return (
+    <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+      <p style={{ fontSize: 13, fontWeight: 700, color: '#1A3D2B', marginBottom: 4 }}>
+        {initialData ? `Editando: ${initialData.name}` : 'Nueva insignia'}
+      </p>
+      <TextField name="name" label="Nombre" value={form.name} onChange={handleChange} required size="small" />
+      <TextField name="description" label="Descripción" value={form.description} onChange={handleChange} size="small" />
+      <TextField
+        name="iconCode"
+        label="Código de ícono"
+        value={form.iconCode}
+        onChange={handleChange}
+        required
+        size="small"
+        helperText="Ej: RECYCLE_1, EARTH_50KG, GOLD_LEVEL"
+      />
+      <Button type="submit" variant="contained" color="primary" size="small">
+        {initialData ? 'Guardar cambios' : 'Crear insignia'}
+      </Button>
+    </form>
+  )
+}
+
+function MissionAdminForm({ initialData, onSaved }) {
+  const [form, setForm] = useState({
+    name: initialData?.name || '',
+    description: initialData?.description || '',
+    targetType: initialData?.targetType || 'DELIVERIES',
+    targetValue: initialData?.targetValue || 1,
+    rewardPoints: initialData?.rewardPoints || 50,
+    deadline: initialData?.deadline || '',
+  })
+
+  useEffect(() => {
+    if (initialData) {
+      setForm({
+        name: initialData.name || '',
+        description: initialData.description || '',
+        targetType: initialData.targetType || 'DELIVERIES',
+        targetValue: initialData.targetValue || 1,
+        rewardPoints: initialData.rewardPoints || 50,
+        deadline: initialData.deadline || '',
+      })
+    } else {
+      setForm({
+        name: '', description: '',
+        targetType: 'DELIVERIES', targetValue: 1, rewardPoints: 50, deadline: '',
+      })
+    }
+  }, [initialData])
+
+  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value })
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    const body = {
+      ...form,
+      targetValue: parseFloat(form.targetValue),
+      rewardPoints: parseInt(form.rewardPoints),
+      deadline: form.deadline || null,
+    }
+    if (initialData) {
+      await updateAdminMission(initialData.id, body)
+    } else {
+      await createAdminMission(body)
+    }
+    onSaved()
+  }
+
+  return (
+    <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+      <p style={{ fontSize: 13, fontWeight: 700, color: '#1A3D2B', marginBottom: 4 }}>
+        {initialData ? `Editando: ${initialData.name}` : 'Nueva misión'}
+      </p>
+      <TextField name="name" label="Nombre" value={form.name} onChange={handleChange} required size="small" />
+      <TextField name="description" label="Descripción" value={form.description} onChange={handleChange} size="small" />
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+  <label style={{ fontSize: 12, color: '#6B8C78' }}>Tipo de métrica</label>
+  <select
+    name="targetType"
+    value={form.targetType}
+    onChange={handleChange}
+    required
+    style={{
+      border: '1px solid #C4C4C4', borderRadius: 4,
+      padding: '8px 12px', fontSize: 14, color: '#1A3D2B',
+      background: '#fff',
+    }}
+  >
+    <option value="DELIVERIES">Entregas</option>
+    <option value="KG_RECYCLED">Kg reciclados</option>
+    <option value="GREEN_POINT_VISITS">Visitas a puntos verdes</option>
+    <option value="MATERIALS_VARIETY">Tipos de materiales</option>
+  </select>
+</div>
+      <TextField
+        name="targetValue"
+        label="Meta"
+        type="number"
+        value={form.targetValue}
+        onChange={handleChange}
+        required
+        size="small"
+      />
+      <TextField
+        name="rewardPoints"
+        label="Puntos de recompensa"
+        type="number"
+        value={form.rewardPoints}
+        onChange={handleChange}
+        size="small"
+      />
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+  <label style={{ fontSize: 12, color: '#6B8C78' }}>Fecha límite (opcional)</label>
+  <input
+    name="deadline"
+    type="date"
+    value={form.deadline}
+    onChange={handleChange}
+    style={{
+      border: '1px solid #C4C4C4', borderRadius: 4,
+      padding: '8px 12px', fontSize: 14, color: '#1A3D2B',
+    }}
+  />
+</div>
+      <Button type="submit" variant="contained" color="primary" size="small">
+        {initialData ? 'Guardar cambios' : 'Crear misión'}
       </Button>
     </form>
   )
